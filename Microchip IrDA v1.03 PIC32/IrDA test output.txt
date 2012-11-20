@@ -1,0 +1,60 @@
+OBEX  Client
+
+Sending vCard...
+vCard sent.
+
+OPBEX Server
+-|-|
+Received:
+BEGIN:VCARD
+N:Microcontroller;PIC32MX
+ADR;DOM;WORK:;;2355 W. Chandler Blvd.;Chandler;AZ;85224;USA
+ORG:Microchip Technology, Inc.
+TITLE:32-bit Microcontroller
+TEL;PREF;WORK;VOICE:(480) 792-7200
+URL;WORK:www.microchip.com/PIC32
+BDAY:20060418
+END:VCARD
+
+
+irCOMM 9-wire Cooked Client Demo
+
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Demonstration complete!
+
+irCOMM 9-wire Cooked Server Demo
+
+Waiting for client...
+Receiving...
+This is a test string!
+This is a test string!
+This is a test string!
+This is a test string!
+This is a test string!
+Disconnected
+Demonstration complete!
+
+irCOMM 3-wire Raw Client Demo
+
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Sending the test string...
+Demonstration complete!
+
+irCOMM 3-wire Raw Server Demo
+
+Waiting for client...
+Receiving...
+This is a test string!
+This is a test string!
+This is a test string!
+This is a test string!
+This is a test string!
+Disconnected
+Demonstration complete!
