@@ -1,0 +1,12 @@
+===Git Basics===
+To retrieve code for the first time:
+	git clone git@github.com:nryoung/project-stupid-robot.git
+To retrieve code every time after that:
+	git pull origin
+
+To make changes to a file:
+	1. Do a 'git add X' where X is a file or folder that has changed that you want to commit.
+	   To add ALL the files in the project, do 'git add .' in the main folder.
+	2. Create a commit with 'git commit'.
+	   Enter in a brief description of what you changed.
+	3. Push the commit to the server with 'git push origin'
