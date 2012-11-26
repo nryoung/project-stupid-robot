@@ -1,7 +1,7 @@
 [HEADER]
 magic_cookie={66E99B07-E706-4689-9E80-9B2582898A13}
 file_version=1.0
-device=PIC32MX795F512L
+device=PIC32MX460F512L
 [PATH_INFO]
 BuildDirPolicy=BuildDirIsSourceDir
 dir_src=
@@ -63,17 +63,17 @@ file_009=no
 file_010=no
 file_011=no
 [FILE_INFO]
-file_000=irCOMM Client.c
+file_000=IrCOMM Client.c
 file_001=myIrDA.c
-file_002=..\Microchip\IrDA\IrDA_PIC32.C
-file_003=..\Microchip\common\uart.c
+file_002=..\Microchip\IrDA\IrDA_PIC32.c
+file_003=..\Microchip\Common\uart.c
 file_004=IrDA_def.h
 file_005=HardwareProfile.h
 file_006=..\Microchip\Include\GenericTypeDefs.h
 file_007=..\Microchip\Include\IrDA\IrDA_COMM.h
-file_008=..\Microchip\Include\IrDA\IrDA_PIC32.H
+file_008=..\Microchip\Include\IrDA\IrDA_PIC32.h
 file_009=..\Microchip\Include\uart.h
-file_010=..\Microchip\Include\IrDA\irdep.H
+file_010=..\Microchip\Include\IrDA\irdep.h
 file_011=..\Microchip\IrDA\libIrDA_PIC32_CC.a
 [SUITE_INFO]
 suite_guid={14495C23-81F8-43F3-8A44-859C583D7760}
