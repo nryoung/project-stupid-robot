@@ -50,8 +50,8 @@
 */
 #define	dirMtrLeftFwd	1
 #define	dirMtrLeftBwd	0
-#define	dirMtrRightFwd	0
-#define	dirMtrRightBwd	1
+#define	dirMtrRightFwd	1
+#define	dirMtrRightBwd	0
 
 /* ------------------------------------------------------------ */
 /*					Variable Declarations						*/

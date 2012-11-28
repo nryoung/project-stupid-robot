@@ -44,9 +44,9 @@
 #define 	TCKPS30				4
 
 
-#define	dtcMtrSlow		4000//2500
-#define	dtcMtrMedium            8000//4000
-#define	dtcMtrFast		12000//8000
+#define	dtcMtrSlow		2500//2500
+#define	dtcMtrMedium            400//4000
+#define	dtcMtrFast		8000//8000
 //*/
 
 /* ------------------------------------------------------------ */
@@ -180,39 +180,126 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
 **		sensor state and determines new duty cycles for both motors
 **		to correctly follow a line.
 */
+//The RS does the actual motor. Don't quite know what the R does.
+#define SetLeftSpeed(x) OC2R = x; OC2RS	= x;
+#define SetRightSpeed(x) OC3R = x; OC3RS = x;
+#define LeftSensor (!(bVal & (1 << bnSns1)))
+#define FrontSensor (!(bVal & (1 << bnSns4)))
+#define Led1 prtLed1Set = (1 << bnLed1);
+#define Led2 prtLed2Set = (1 << bnLed2);
+#define Led3 prtLed3Set = (1 << bnLed3);
+#define Led4 prtLed4Set = (1 << bnLed4);
+#define Led1Clr prtLed1SetClr = (1 << bnLed1);
+#define Led2Clr prtLed2SetClr = (1 << bnLed2);
+#define Led3Clr prtLed3SetClr = (1 << bnLed3);
+#define Led4Clr prtLed4SetClr = (1 << bnLed4);
+#define SetRightDir(x) OC4CONCLR	= ( 1 << 15 );\
+        x = ( 1 << bnMtrRightDir );\
+        OC4CONSET	= ( 1 << 15 );
+//prtMtrRightDirClr for reverse
+//prtMtrRightDirSet for forward
+#define SetLeftDir(x) OC1CONCLR	= ( 1 << 15 );\
+        x = ( 1 << bnMtrLeftDir );\
+        OC1CONSET	= ( 1 << 15 );
+#define LeftReverse SetLeftDir(prtMtrLeftDirSet); //Forward
+#define LeftForward SetLeftDir(prtMtrLeftDirClr); //Backward
+#define RightReverse SetRightDir(prtMtrRightDirSet); //Forward
+#define RightForward SetRightDir(prtMtrRightDirClr); //Forward
+#define TURN90 1500*2
+
+/*
+ *
+        trisMtrLeftEnClr	= ( 1 << bnMtrLeftEn );\
+        prtMtrLeftEnClr	= ( 1 << bnMtrLeftEn );\
+        trisMtrRightEnClr	= ( 1 << bnMtrRightEn );\
+        prtMtrRightEnClr	= ( 1 << bnMtrRightEn );\
+ */
+
+BOOL InTheMiddleOfSomething = fFalse;
+//http://hades.mech.northwestern.edu/index.php/PIC32MX:_Servo_Control
 
 void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
 {
 	BYTE bVal;
-	bVal = PORTReadBits(IOPORT_B, BIT_0 | BIT_1 | BIT_2 | BIT_3);
+	bVal = PORTReadBits(IOPORT_B, BIT_0 | BIT_3);
 
-        
-	if((!(bVal & (1 << bnSns1)) && !(bVal & (1 << bnSns4)))
-                )//|| (!(bVal & (1 << bnSns2)) && !(bVal & (1 << bnSns3))))
-	{	//Multiple sensors indicate a crossing path
-                OC2R	= dtcMtrStopped;
-		OC2RS	= dtcMtrStopped;
-                OC3R	= dtcMtrStopped;
-		OC3RS	= dtcMtrStopped;
+        if((!(bVal & (1 << bnSns1))) && (!(bVal & (1 << bnSns4))))
+	{
+            prtLed4Set = (1 << bnLed4);
+            OC2R = dtcMtrStopped; OC2RS	= dtcMtrStopped;
+            OC3R = dtcMtrStopped; OC3RS	= dtcMtrStopped;
 	}
-	
-	else //*/
+	else
         {
+            prtLed3Set = (1 << bnLed3);
             if(!(bVal & (1 << bnSns1)))	//Far left sensor -> hard left
             {
-                    OC2R	= dtcMtrMedium;
-                    OC2RS	= dtcMtrMedium;
+                prtLed1Set = (1 << bnLed1);
+                OC2R = dtcMtrStopped;
+                OC2RS	= dtcMtrStopped;
             }
             if(!(bVal & (1 << bnSns4)))	//Far right sensor -> hard right
             {
-                    OC3R	= dtcMtrMedium;
-                    OC3RS	= dtcMtrMedium;
+                prtLed2Set = (1 << bnLed2);
+                OC3R = dtcMtrStopped;
+                OC3RS	= dtcMtrStopped;
+            }
+        }
+        prtLed3Clr = (1 << bnLed3);
+        mCNClearIntFlag();
+        return;
+
+        //if(InTheMiddleOfSomething)
+          //  return;
+        /*
+        if(FrontSensor)
+            Led1;
+        if(!FrontSensor)
+        {
+            InTheMiddleOfSomething = fTrue;
+            Led1;
+            SetRightDir(prtMtrRightDirSet); //Reverse
+            mCNClearIntFlag();
+            Wait_ms(TURN90);
+            SetRightDir(prtMtrRightDirClr); //Forward
+            mCNClearIntFlag();
+            //Led1Clr;
+            InTheMiddleOfSomething = fFalse;
+        }
+        if(LeftSensor)
+        {
+            InTheMiddleOfSomething = fTrue;
+            Led4;
+            Wait_ms(TURN90/2);
+            SetLeftSpeed(dtcMtrStopped);
+            Wait_ms(TURN90);
+            SetLeftSpeed(dtcMtrMedium);
+            Wait_ms(TURN90/4);
+            //Led4Clr;
+            InTheMiddleOfSomething = fFalse;
+        }
+        */
+        /*
+	if(LeftSensor && FrontSensor)
+	{
+            SetLeftSpeed(dtcMtrStopped);
+            SetRightSpeed(dtcMtrStopped);
+	}
+	else
+        {
+            if(LeftSensor)	//Far left sensor -> hard left
+            {
+                SetLeftSpeed(dtcMtrMedium);
+            }
+            if(FrontSensor)	//Far right sensor -> hard right
+            {
+                SetRightSpeed(dtcMtrMedium);
             }
         }
 
-	
+	*/
 	mCNClearIntFlag();
-}	
+}
 
 /* ------------------------------------------------------------ */
 /*				Procedure Definitions							*/
@@ -244,39 +331,45 @@ int main(void)
 
 	DeviceInit();
 	AppInit();
+
         
+        while(stBtn1!=stPressed && stBtn2!=stPressed)
+        {
+            mT5IntEnable(fFalse);
+            stBtn1 = btnBtn1.stBtn;
+            stBtn2 = btnBtn2.stBtn;
+            mT5IntEnable(fTrue);
+        }
+
+        RightReverse;
+        LeftReverse;
+        SetLeftSpeed(dtcMtrSlow);
+        SetRightSpeed(dtcMtrSlow);
+
+        mCNIntEnable(fTrue);	//Sensors will trigger
+        while(fTrue);
+
+
+        /*
 	while (fTrue)
 	{		
 		mT5IntEnable(fFalse);
 		stBtn1 = btnBtn1.stBtn;
 		stBtn2 = btnBtn2.stBtn;
 		mT5IntEnable(fTrue);
-		//configure OCR to go forward
 
 		if ((stPressed == stBtn1) && (stReleased == stBtn2))
 		{
 			mCNIntEnable(fFalse); //Senors won't trigger
-			
-			//Stop motors		
-			OC2R	= dtcMtrStopped;
-			OC2RS	= dtcMtrStopped;
-			OC3R	= dtcMtrStopped;
-			OC3RS	= dtcMtrStopped;
+			SetLeftSpeed(dtcMtrStopped);
+                        SetRightSpeed(dtcMtrStopped);
 		}	
 		
 		else if((stReleased == stBtn1) && (stPressed == stBtn2))
 		{
 			mCNIntEnable(fTrue);	//Sensors will trigger
-			
-			//Start motors
-                        /*
-			OC2R	= dtcMtrMedium;
-			OC2RS	= dtcMtrMedium;
-			OC3R	= dtcMtrMedium;
-			OC3RS	= dtcMtrMedium;
-                        //*/
 		}
-	}
+	}*/
 }
 
 /* ------------------------------------------------------------ */
@@ -302,12 +395,12 @@ int main(void)
 void DeviceInit()
 {
 	// Configure left motor direction pin and set default direction.
-	trisMtrLeftDirClr	= ( 1 << bnMtrLeftDir );
-	prtMtrLeftDirClr	= ( 1 << bnMtrLeftDir );	// forward
+	trisMtrLeftDirSet	= ( 1 << bnMtrLeftDir );
+	prtMtrLeftDirSet	= ( 1 << bnMtrLeftDir );	// forward
 	
 	// Configure right motor diretion pin and set default direction.
 	trisMtrRightDirClr	= ( 1 << bnMtrRightDir );	//modify for JD
-	prtMtrRightDirSet	= ( 1 << bnMtrRightDir );	// forward
+	prtMtrRightDirClr	= ( 1 << bnMtrRightDir );	// forward
 
 	// Configure Output Compare 2 to drive the left motor.
 	OC2CON	= ( 1 << 2 ) | ( 1 << 1 );	// pwm
@@ -344,7 +437,7 @@ void DeviceInit()
 	T5CON = ( 1 << 15 ) | ( 1 << 5 ) | ( 1 << 4 ); // fTimer5 = fPb / 8
 	
 	// Setup light sensor pins
-	PORTSetPinsDigitalIn(IOPORT_B, BIT_0 | BIT_1 | BIT_2 | BIT_3);
+	PORTSetPinsDigitalIn(IOPORT_B, BIT_0 | BIT_3);
 	
 	// Change notice configured for CN 2 through 5 for light sensors.
 	mCNOpen(CN_ON, (CN2_ENABLE | CN3_ENABLE | CN4_ENABLE | CN5_ENABLE), CN_PULLUP_DISABLE_ALL);
@@ -376,6 +469,7 @@ void DeviceInit()
 
 void AppInit()
 {
+    //Enable the LEDs
     trisLed1Clr = ( 1 << bnLed1 );
     prtLed1Clr = ( 1 << bnLed1 );
     trisLed2Clr = (1 << bnLed2 );

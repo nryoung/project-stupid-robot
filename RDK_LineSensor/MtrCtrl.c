@@ -211,6 +211,7 @@ void __ISR(_TIMER_5_VECTOR, ipl7) _Timer5Handler(void)
 **		This routine will update the motor controller based on the
 **		current X and Y position of the right joystick of the controller.
 */
+
 void UpdateMotorControl( HWORD posX, HWORD posY )
 {
 	static	HWORD	tusMtrLeftDcSav		= dtcMtrStopped;	// stopped
@@ -373,6 +374,8 @@ void UpdateMotorControl( HWORD posX, HWORD posY )
 										// right motor.
 	}
 }
+
+
 
 
 /*************************************************************************************/
