@@ -45,7 +45,7 @@
 
 
 #define	dtcMtrSlow		2500//2500
-#define	dtcMtrMedium            400//4000
+#define	dtcMtrMedium            4000//4000
 #define	dtcMtrFast		8000//8000
 //*/
 
@@ -189,10 +189,10 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
 #define Led2 prtLed2Set = (1 << bnLed2);
 #define Led3 prtLed3Set = (1 << bnLed3);
 #define Led4 prtLed4Set = (1 << bnLed4);
-#define Led1Clr prtLed1SetClr = (1 << bnLed1);
-#define Led2Clr prtLed2SetClr = (1 << bnLed2);
-#define Led3Clr prtLed3SetClr = (1 << bnLed3);
-#define Led4Clr prtLed4SetClr = (1 << bnLed4);
+#define Led1Clr prtLed1Clr = (1 << bnLed1);
+#define Led2Clr prtLed2Clr = (1 << bnLed2);
+#define Led3Clr prtLed3Clr = (1 << bnLed3);
+#define Led4Clr prtLed4Clr = (1 << bnLed4);
 #define SetRightDir(x) OC4CONCLR	= ( 1 << 15 );\
         x = ( 1 << bnMtrRightDir );\
         OC4CONSET	= ( 1 << 15 );
@@ -205,7 +205,7 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
 #define LeftForward SetLeftDir(prtMtrLeftDirClr); //Backward
 #define RightReverse SetRightDir(prtMtrRightDirSet); //Forward
 #define RightForward SetRightDir(prtMtrRightDirClr); //Forward
-#define TURN90 1500*2
+#define TURN90 2500
 
 /*
  *
@@ -223,49 +223,28 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
 	BYTE bVal;
 	bVal = PORTReadBits(IOPORT_B, BIT_0 | BIT_3);
 
-        if((!(bVal & (1 << bnSns1))) && (!(bVal & (1 << bnSns4))))
-	{
-            prtLed4Set = (1 << bnLed4);
-            OC2R = dtcMtrStopped; OC2RS	= dtcMtrStopped;
-            OC3R = dtcMtrStopped; OC3RS	= dtcMtrStopped;
-	}
-	else
-        {
-            prtLed3Set = (1 << bnLed3);
-            if(!(bVal & (1 << bnSns1)))	//Far left sensor -> hard left
-            {
-                prtLed1Set = (1 << bnLed1);
-                OC2R = dtcMtrStopped;
-                OC2RS	= dtcMtrStopped;
-            }
-            if(!(bVal & (1 << bnSns4)))	//Far right sensor -> hard right
-            {
-                prtLed2Set = (1 << bnLed2);
-                OC3R = dtcMtrStopped;
-                OC3RS	= dtcMtrStopped;
-            }
-        }
-        prtLed3Clr = (1 << bnLed3);
-        mCNClearIntFlag();
-        return;
 
         //if(InTheMiddleOfSomething)
           //  return;
-        /*
-        if(FrontSensor)
-            Led1;
+        
         if(!FrontSensor)
         {
             InTheMiddleOfSomething = fTrue;
             Led1;
-            SetRightDir(prtMtrRightDirSet); //Reverse
+            SetRightSpeed(dtcMtrStopped);
+            SetRightDir(prtMtrRightDirClr); //Reverse
+            SetRightSpeed(dtcMtrMedium);
             mCNClearIntFlag();
             Wait_ms(TURN90);
-            SetRightDir(prtMtrRightDirClr); //Forward
-            mCNClearIntFlag();
-            //Led1Clr;
+            SetRightSpeed(dtcMtrStopped);
+            SetRightDir(prtMtrRightDirSet); //Forward
+            SetRightSpeed(dtcMtrMedium);
+            //mCNClearIntFlag();
+            Led1Clr;
             InTheMiddleOfSomething = fFalse;
+            return;
         }
+
         if(LeftSensor)
         {
             InTheMiddleOfSomething = fTrue;
@@ -278,7 +257,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
             //Led4Clr;
             InTheMiddleOfSomething = fFalse;
         }
-        */
+        
         /*
 	if(LeftSensor && FrontSensor)
 	{
@@ -343,8 +322,8 @@ int main(void)
 
         RightReverse;
         LeftReverse;
-        SetLeftSpeed(dtcMtrSlow);
-        SetRightSpeed(dtcMtrSlow);
+        SetLeftSpeed(dtcMtrMedium);
+        SetRightSpeed(dtcMtrMedium);
 
         mCNIntEnable(fTrue);	//Sensors will trigger
         while(fTrue);
