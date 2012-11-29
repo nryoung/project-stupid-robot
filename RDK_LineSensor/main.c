@@ -30,52 +30,11 @@
 #include "stdtypes.h"
 #include "config.h"
 #include "MtrCtrl.h"
-
-/* ------------------------------------------------------------ */
-/*				Local Type Definitions							*/
-/* ------------------------------------------------------------ */
-
-#define		TCKPS22 			6
-#define 	TCKPS21				5
-#define 	TCKPS20				4
-
-#define		TCKPS32 			6
-#define 	TCKPS31				5
-#define 	TCKPS30				4
+#include "jan_macros.h"
+#include "override_config_bits.h"
 
 
-#define	dtcMtrSlow		2500//2500
-#define	dtcMtrMedium            4000//4000
-#define	dtcMtrFast		8000//8000
-//*/
 
-/* ------------------------------------------------------------ */
-/*				Global Variables								*/
-/* ------------------------------------------------------------ */
-
-#ifndef OVERRIDE_CONFIG_BITS
-
-#pragma config ICESEL   = ICS_PGx2		// ICE/ICD Comm Channel Select
-#pragma config BWP      = OFF			// Boot Flash Write Protect
-#pragma config CP       = OFF			// Code Protect
-#pragma config FNOSC    = PRIPLL		// Oscillator Selection
-#pragma config FSOSCEN  = OFF			// Secondary Oscillator Enable
-#pragma config IESO     = OFF			// Internal/External Switch-over
-#pragma config POSCMOD  = HS			// Primary Oscillator
-#pragma config OSCIOFNC = OFF			// CLKO Enable
-#pragma config FPBDIV   = DIV_8			// Peripheral Clock divisor
-#pragma config FCKSM    = CSDCMD		// Clock Switching & Fail Safe Clock Monitor
-#pragma config WDTPS    = PS1			// Watchdog Timer Postscale
-#pragma config FWDTEN   = OFF			// Watchdog Timer 
-#pragma config FPLLIDIV = DIV_2			// PLL Input Divider
-#pragma config FPLLMUL  = MUL_16		// PLL Multiplier
-#pragma config UPLLIDIV = DIV_2			// USB PLL Input Divider
-#pragma config UPLLEN   = OFF			// USB PLL Enabled
-#pragma config FPLLODIV = DIV_1			// PLL Output Divider
-#pragma config PWP      = OFF			// Program Flash Write Protect
-#pragma config DEBUG    = OFF			// Debugger Enable/Disable
-    
-#endif
 
 /* ------------------------------------------------------------ */
 /*				Local Variables									*/
@@ -180,32 +139,7 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
 **		sensor state and determines new duty cycles for both motors
 **		to correctly follow a line.
 */
-//The RS does the actual motor. Don't quite know what the R does.
-#define SetLeftSpeed(x) OC2R = x; OC2RS	= x;
-#define SetRightSpeed(x) OC3R = x; OC3RS = x;
-#define LeftSensor (!(bVal & (1 << bnSns1)))
-#define FrontSensor (!(bVal & (1 << bnSns4)))
-#define Led1 prtLed1Set = (1 << bnLed1);
-#define Led2 prtLed2Set = (1 << bnLed2);
-#define Led3 prtLed3Set = (1 << bnLed3);
-#define Led4 prtLed4Set = (1 << bnLed4);
-#define Led1Clr prtLed1Clr = (1 << bnLed1);
-#define Led2Clr prtLed2Clr = (1 << bnLed2);
-#define Led3Clr prtLed3Clr = (1 << bnLed3);
-#define Led4Clr prtLed4Clr = (1 << bnLed4);
-#define SetRightDir(x) OC4CONCLR	= ( 1 << 15 );\
-        x = ( 1 << bnMtrRightDir );\
-        OC4CONSET	= ( 1 << 15 );
-//prtMtrRightDirClr for reverse
-//prtMtrRightDirSet for forward
-#define SetLeftDir(x) OC1CONCLR	= ( 1 << 15 );\
-        x = ( 1 << bnMtrLeftDir );\
-        OC1CONSET	= ( 1 << 15 );
-#define LeftReverse SetLeftDir(prtMtrLeftDirSet); //Forward
-#define LeftForward SetLeftDir(prtMtrLeftDirClr); //Backward
-#define RightReverse SetRightDir(prtMtrRightDirSet); //Forward
-#define RightForward SetRightDir(prtMtrRightDirClr); //Forward
-#define TURN90 2500
+
 
 /*
  *
@@ -216,32 +150,41 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
  */
 
 BOOL InTheMiddleOfSomething = fFalse;
-//http://hades.mech.northwestern.edu/index.php/PIC32MX:_Servo_Control
 
 void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
 {
+        if(InTheMiddleOfSomething)
+            return;
 	BYTE bVal;
 	bVal = PORTReadBits(IOPORT_B, BIT_0 | BIT_3);
+        Led2;
 
-
-        //if(InTheMiddleOfSomething)
-          //  return;
         
-        if(!FrontSensor)
+        /******************A front wall is detected******************/
+        // 
+        if(!FrontSensor && LeftSensor)
         {
             InTheMiddleOfSomething = fTrue;
             Led1;
+            Led2Clr;
+
+            //Reverse the motor
             SetRightSpeed(dtcMtrStopped);
-            SetRightDir(prtMtrRightDirClr); //Reverse
-            SetRightSpeed(dtcMtrMedium);
-            mCNClearIntFlag();
-            Wait_ms(TURN90);
-            SetRightSpeed(dtcMtrStopped);
-            SetRightDir(prtMtrRightDirSet); //Forward
+            RightReverse; //SetRightDir(prtMtrRightDirClr); //Reverse
             SetRightSpeed(dtcMtrMedium);
             //mCNClearIntFlag();
+
+            //Wait until the turn is executed
+            Wait_ms(TURN90);
+
+            //Continue going straight
+            SetRightSpeed(dtcMtrStopped);
+            RightForward; //SetRightDir(prtMtrRightDirSet); //Forward
+            SetRightSpeed(dtcMtrMedium);
+            
             Led1Clr;
             InTheMiddleOfSomething = fFalse;
+            mCNClearIntFlag();
             return;
         }
 
@@ -249,12 +192,20 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
         {
             InTheMiddleOfSomething = fTrue;
             Led4;
+            Led2Clr;
+            
+            //Run for a few moments to get around the corner
             Wait_ms(TURN90/2);
+
+            //Stop it until the turn is completed
             SetLeftSpeed(dtcMtrStopped);
             Wait_ms(TURN90);
+
+            //Continue going straight and wait to mare sure it can detect the new wall
             SetLeftSpeed(dtcMtrMedium);
             Wait_ms(TURN90/4);
-            //Led4Clr;
+
+            Led4Clr;
             InTheMiddleOfSomething = fFalse;
         }
         
@@ -327,28 +278,6 @@ int main(void)
 
         mCNIntEnable(fTrue);	//Sensors will trigger
         while(fTrue);
-
-
-        /*
-	while (fTrue)
-	{		
-		mT5IntEnable(fFalse);
-		stBtn1 = btnBtn1.stBtn;
-		stBtn2 = btnBtn2.stBtn;
-		mT5IntEnable(fTrue);
-
-		if ((stPressed == stBtn1) && (stReleased == stBtn2))
-		{
-			mCNIntEnable(fFalse); //Senors won't trigger
-			SetLeftSpeed(dtcMtrStopped);
-                        SetRightSpeed(dtcMtrStopped);
-		}	
-		
-		else if((stReleased == stBtn1) && (stPressed == stBtn2))
-		{
-			mCNIntEnable(fTrue);	//Sensors will trigger
-		}
-	}*/
 }
 
 /* ------------------------------------------------------------ */
@@ -502,5 +431,3 @@ void Wait_ms(WORD delay)
 		delay -= 1;
 	}
 }
-
-/************************************************************************/

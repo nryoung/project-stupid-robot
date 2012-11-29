@@ -7,6 +7,8 @@
       <itemPath>../config.h</itemPath>
       <itemPath>../MtrCtrl.h</itemPath>
       <itemPath>../stdtypes.h</itemPath>
+      <itemPath>../jan_macros.h</itemPath>
+      <itemPath>../override_config_bits.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
