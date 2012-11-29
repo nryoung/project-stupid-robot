@@ -1,30 +1,26 @@
-/************************************************************************/
-/*																		*/
-/*	main.c	--	Main program module for project							*/
-/*																		*/
-/************************************************************************/
-/*	Author: 	Dion Moses												*/
-/*	Copyright 2009, Digilent Inc.										*/
-/************************************************************************/
-/*  Module Description: 												*/
-/*																		*/
-/*	This program is a reference design for the Digilent	Line Sensor		*/
-/*	Robotic Development Kit (RDK-Line) with the Cerebot 32MX4			*/
-/*	Microcontroller board.  It uses two timers to drive two motors 		*/
-/*	with output compare	modules.										*/
-/*																		*/
-/************************************************************************/
-/*  Revision History:													*/
-/*																		*/
-/*	10/01/09(DionM): created											*/
-/*	12/31/09(StevenH): updated to include light sensor support			*/
-/*	12/08/10(AaronO): renamed to RDK_LineSensor
-/*																		*/
-/************************************************************************/
-
-/* ------------------------------------------------------------ */
-/*				Include File Definitions						*/
-/* ------------------------------------------------------------ */
+//-----------------------------------------------------------------------/
+//																		*/
+//	main.c	--	Main program module for project							*/
+//																		*/
+//-----------------------------------------------------------------------/
+//	Author: 	Dion Moses												*/
+//	Copyright 2009, Digilent Inc.										*/
+//-----------------------------------------------------------------------/
+//  Module Description: 												*/
+//																		*/
+//	This program is a reference design for the Digilent	Line Sensor
+//	Robotic Development Kit (RDK-Line) with the Cerebot 32MX4
+//	Microcontroller board.  It uses two timers to drive two motors
+//	with output compare	modules.										*/
+//																		*/
+//-----------------------------------------------------------------------/
+//  Revision History:													*/
+//																		*/
+//	10/01/09(DionM): created											*/
+//	12/31/09(StevenH): updated to include light sensor support			*/
+//	12/08/10(AaronO): renamed to RDK_LineSensor
+//																		*/
+//-----------------------------------------------------------------------/
 
 #include <plib.h>
 #include "stdtypes.h"
@@ -32,38 +28,8 @@
 #include "MtrCtrl.h"
 #include "jan_macros.h"
 #include "override_config_bits.h"
+#include "buttons.h"
 
-
-
-
-/* ------------------------------------------------------------ */
-/*				Local Variables									*/
-/* ------------------------------------------------------------ */
-
-#define	stPressed	1
-#define	stReleased	0
-
-#define	cstMaxCnt	10 // number of consecutive reads required for
-					   // the state of a button to be updated
-
-struct btn {
-	BYTE	stBtn;	// status of the button (pressed or released)
-	BYTE	stCur;  // current read state of the button
-	BYTE	stPrev; // previous read state of the button
-	BYTE	cst;	// number of consecutive reads of the same button 
-					// state
-};
-
-/* ------------------------------------------------------------ */
-/*				Global Variables				                */
-/* ------------------------------------------------------------ */
-
-volatile	struct btn	btnBtn1;
-volatile	struct btn	btnBtn2;
-
-/* ------------------------------------------------------------ */
-/*				Forward Declarations							*/
-/* ------------------------------------------------------------ */
 
 void	DeviceInit(void);
 void	AppInit(void);
@@ -140,14 +106,6 @@ void __ISR(_TIMER_5_VECTOR, ipl7) Timer5Handler(void)
 **		to correctly follow a line.
 */
 
-
-/*
- *
-        trisMtrLeftEnClr	= ( 1 << bnMtrLeftEn );\
-        prtMtrLeftEnClr	= ( 1 << bnMtrLeftEn );\
-        trisMtrRightEnClr	= ( 1 << bnMtrRightEn );\
-        prtMtrRightEnClr	= ( 1 << bnMtrRightEn );\
- */
 
 BOOL InTheMiddleOfSomething = fFalse;
 
@@ -231,28 +189,6 @@ void __ISR(_CHANGE_NOTICE_VECTOR, ipl2) ChangeNotice_Handler(void)
 	mCNClearIntFlag();
 }
 
-/* ------------------------------------------------------------ */
-/*				Procedure Definitions							*/
-/* ------------------------------------------------------------ */
-/***	main
-**
-**	Synopsis:
-**		st = main()
-**
-**	Parameters:
-**		none
-**
-**	Return Values:
-**		does not return
-**
-**	Errors:
-**		none
-**
-**	Description:
-**		Main program module. Performs basic board initialization
-**		and then enters the main program loop.
-*/
-
 int main(void)
 {
 
@@ -279,26 +215,6 @@ int main(void)
         mCNIntEnable(fTrue);	//Sensors will trigger
         while(fTrue);
 }
-
-/* ------------------------------------------------------------ */
-/***	DeviceInit
-**
-**	Synopsis:
-**		DeviceInit()
-**
-**	Parameters:
-**		none
-**
-**	Return Values:
-**		none
-**
-**	Errors:
-**		none
-**
-**	Description:
-**		Initializes on chip peripheral devices to the default
-**		state.
-*/
 
 void DeviceInit()
 {
@@ -354,26 +270,6 @@ void DeviceInit()
 	// Enable multi-vector interrupts.
 	INTEnableSystemMultiVectoredInt();
 }
-
-/* ------------------------------------------------------------ */
-/***	AppInit
-**
-**	Synopsis:
-**		AppInit()
-**
-**	Parameters:
-**		none
-**
-**	Return Values:
-**		none
-**
-**	Errors:
-**		none
-**
-**	Description:
-**		Performs application specific initialization. Sets devices
-**		and global variables for application.
-*/
 
 void AppInit()
 {

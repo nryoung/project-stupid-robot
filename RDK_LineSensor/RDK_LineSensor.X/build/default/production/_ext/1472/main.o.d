@@ -4,4 +4,5 @@ build/default/production/_ext/1472/main.o:  \
  ../config.h  \
 ../MtrCtrl.h  \
 ../jan_macros.h  \
-../override_config_bits.h 
+../override_config_bits.h  \
+ ../buttons.h 
